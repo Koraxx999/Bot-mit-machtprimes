@@ -23,7 +23,7 @@ from power_primes import (
     SELBSTBEWUSSTE_DOMINANZ,
     UNTERSTELLUNGEN
 )
-
+INSULT_WORDS = load_insults()
 INSULTS = [
     # Englisch – harte Beleidigungen
     "idiot", "stupid", "fuck", "fucking", "bitch", "asshole", "dumb",
