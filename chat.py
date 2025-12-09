@@ -23,7 +23,7 @@ from power_primes import (
     SELBSTBEWUSSTE_DOMINANZ,
     UNTERSTELLUNGEN
 )
-INSULT_WORDS = load_insults()
+
 
 def load_insults(filepath="insults.txt"):
     try:
@@ -38,7 +38,7 @@ def img_to_base64(path):
         data = f.read()
         return base64.b64encode(data).decode()
 
-
+INSULT_WORDS = load_insults()
 # --------------------------------
 # Session State initialisieren
 # --------------------------------
