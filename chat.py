@@ -698,65 +698,64 @@ if user_input and not st.session_state["closed"]:
         log_result(st.session_state["session_id"], False, None, len(st.session_state["history"]))
         st.stop()
 
-# --- Gleiche Nachricht zwei-/dreimal ---
-if st.session_state["last_user_msg"] == user_input.strip():
-    st.session_state["duplicate_msg_count"] += 1
-else:
-    st.session_state["duplicate_msg_count"] = 0
-
-if st.session_state["duplicate_msg_count"] == 1:
-    st.warning("Dieselbe Nachricht wurde zweimal wiederholt. Bitte formuliere neu.")
-    # Speichern trotzdem erlaubt → Bot antwortet wie gewohnt
-elif st.session_state["duplicate_msg_count"] >= 2:
-    st.session_state["closed"] = True
-    st.session_state["history"].append({
-        "role": "assistant",
-        "text": "Da du dich wiederholst, wird die Verhandlung beendet.",
-        "ts": datetime.now(tz).strftime("%d.%m.%Y %H:%M"),
-    })
-    log_result(st.session_state["session_id"], False, None, len(st.session_state["history"]))
-    st.stop()
-   
-# --- Analyse Preisangabe ---
-user_offer_numbers = re.findall(r"\d{2,5}", user_input)
-user_offer = int(user_offer_numbers[0]) if user_offer_numbers else None
-
-# --- Angebot zweimal gleich ---
-if user_offer is not None:
-    if st.session_state["last_user_offer"] == user_offer:
-        st.session_state["duplicate_offer_count"] += 1
+    # --- C2: Gleiche Nachricht zwei-/dreimal ---
+    if st.session_state["last_user_msg"] == user_input.strip():
+        st.session_state["duplicate_msg_count"] += 1
     else:
-        st.session_state["duplicate_offer_count"] = 0
+        st.session_state["duplicate_msg_count"] = 0
 
-    if st.session_state["duplicate_offer_count"] == 1:
-        st.warning("Du hast exakt dasselbe Angebot erneut gesendet.")
-    elif st.session_state["duplicate_offer_count"] >= 2:
+    if st.session_state["duplicate_msg_count"] == 1:
+        st.warning("Dieselbe Nachricht wurde zweimal wiederholt. Bitte formuliere neu.")
+    elif st.session_state["duplicate_msg_count"] >= 2:
         st.session_state["closed"] = True
         st.session_state["history"].append({
             "role": "assistant",
-            "text": "Da du dein Angebot wiederholt hast, beende ich die Verhandlung.",
+            "text": "Da du dich wiederholst, wird die Verhandlung beendet.",
             "ts": datetime.now(tz).strftime("%d.%m.%Y %H:%M"),
         })
         log_result(st.session_state["session_id"], False, None, len(st.session_state["history"]))
         st.stop()
 
-    # --- Unterbieten des eigenen Angebots ---
-    if st.session_state["last_user_offer"] and user_offer < st.session_state["last_user_offer"]:
-        st.session_state["closed"] = True
-        st.session_state["history"].append({
-            "role": "assistant",
-            "text": "Du hast dein eigenes Angebot unterboten. Damit ist die Verhandlung beendet.",
-            "ts": datetime.now(tz).strftime("%d.%m.%Y %H:%M"),
-        })
-        log_result(st.session_state["session_id"], False, None, len(st.session_state["history"]))
-        st.stop()
+    # --- C3: Analyse Preisangabe ---
+    user_offer_numbers = re.findall(r"\d{2,5}", user_input)
+    user_offer = int(user_offer_numbers[0]) if user_offer_numbers else None
 
-st.session_state["last_user_msg"] = user_input.strip()
-st.session_state["last_user_offer"] = user_offer
-    
+    # --- C3: Angebot zweimal gleich ---
+    if user_offer is not None:
+        if st.session_state["last_user_offer"] == user_offer:
+            st.session_state["duplicate_offer_count"] += 1
+        else:
+            st.session_state["duplicate_offer_count"] = 0
+
+        if st.session_state["duplicate_offer_count"] == 1:
+            st.warning("Du hast exakt dasselbe Angebot erneut gesendet.")
+        elif st.session_state["duplicate_offer_count"] >= 2:
+            st.session_state["closed"] = True
+            st.session_state["history"].append({
+                "role": "assistant",
+                "text": "Da du dein Angebot wiederholt hast, beende ich die Verhandlung.",
+                "ts": datetime.now(tz).strftime("%d.%m.%Y %H:%M"),
+            })
+            log_result(st.session_state["session_id"], False, None, len(st.session_state["history"]))
+            st.stop()
+
+        # --- C4: Unterbieten des eigenen Angebots ---
+        if st.session_state["last_user_offer"] and user_offer < st.session_state["last_user_offer"]:
+            st.session_state["closed"] = True
+            st.session_state["history"].append({
+                "role": "assistant",
+                "text": "Du hast dein eigenes Angebot unterboten. Damit ist die Verhandlung beendet.",
+                "ts": datetime.now(tz).strftime("%d.%m.%Y %H:%M"),
+            })
+            log_result(st.session_state["session_id"], False, None, len(st.session_state["history"]))
+            st.stop()
+
+    # --- C4: Letzten Zustand speichern ---
+    st.session_state["last_user_msg"] = user_input.strip()
+    st.session_state["last_user_offer"] = user_offer
+
     # Zeitstempel erzeugen
     now = datetime.now(tz).strftime("%d.%m.%Y %H:%M")
-
     # Nutzer-Nachricht speichern
     st.session_state["history"].append({
         "role": "user",
