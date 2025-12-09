@@ -24,48 +24,13 @@ from power_primes import (
     UNTERSTELLUNGEN
 )
 INSULT_WORDS = load_insults()
-INSULTS = [
-    # Englisch – harte Beleidigungen
-    "idiot", "stupid", "fuck", "fucking", "bitch", "asshole", "dumb",
-    "moron", "retard", "retarded", "loser", "douche", "douchebag",
-    "motherfucker", "mf", "jackass", "cunt", "prick", "bastard",
-    "sucker", "dickhead", "shithead", "scumbag", "trash", "garbage person",
-    "hoe", "slut", "skank",
 
-    # Englisch – zusammengesetzte Variationen
-    "ass licker", "asslicker", "ass kisser", "asskisser",
-    "cock sucker", "cocksucker", "dick sucker", "dicksucker",
-    "fuck you", "go fuck yourself", "screw you",
-
-    # Deutsch – klassische Beleidigungen
-    "dumm", "blöd", "vollidiot", "trottel", "depp", "arsch",
-    "arschloch", "spast", "spasti", "mongo", "hirnamputiert",
-    "scheiß", "scheiss", "scheißkerl", "idiotiker",
-
-    # Deutsch – harte Beleidigungen
-    "hurensohn", "hs", "hure", "nutte", "fotze", "wichser",
-    "wixxer", "drecksack", "opfer", "missgeburt",
-    "untermensch", "minderbemittelt", "minderwertig",
-    "asozial", "aso", "assozial", "kackhaufen",
-
-    # Deutsch – Slang & vulgär
-    "lutscher", "schwanz", "schwanzlutscher", "schwanz lutscher",
-    "pimmel", "pimmelfresser", "fick dich", "leck mich",
-    "verpiss dich", "verpiss", "spacken", "spacko",
-    "hosenscheißer", "ar***", "kackbratze",
-
-    # Chat-/Jugendvarianten
-    "opfa", "b1tch", "fck", "fck u", "fkn", "huso", "huso*", "huren sohn",
-    "fotzn", "wtf idiot", "kys idiot", "kys", "kill yourself", "kill urself",
-
-    # Abwertungen & indirekte Beleidigungen
-    "vollpfosten", "pfeife", "nulpe", "kanacke", "penner",
-    "pleb", "primitive", "wurm", "ratte", "zecke",
-
-    # Meme-/Szenebezogene (Neutral genug, aber beleidigend)
-    "gti fahrer", "kartoffel", "kapitalist", "opferkind",
-]
-
+def load_insults(filepath="insults.txt"):
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return [line.strip().lower() for line in f if line.strip()]
+    except FileNotFoundError:
+        return []  # falls Datei fehlt → leer lassen statt Absturz
 #---
 
 def img_to_base64(path):
