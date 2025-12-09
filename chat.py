@@ -24,6 +24,47 @@ from power_primes import (
     UNTERSTELLUNGEN
 )
 
+INSULTS = [
+    # Englisch – harte Beleidigungen
+    "idiot", "stupid", "fuck", "fucking", "bitch", "asshole", "dumb",
+    "moron", "retard", "retarded", "loser", "douche", "douchebag",
+    "motherfucker", "mf", "jackass", "cunt", "prick", "bastard",
+    "sucker", "dickhead", "shithead", "scumbag", "trash", "garbage person",
+    "hoe", "slut", "skank",
+
+    # Englisch – zusammengesetzte Variationen
+    "ass licker", "asslicker", "ass kisser", "asskisser",
+    "cock sucker", "cocksucker", "dick sucker", "dicksucker",
+    "fuck you", "go fuck yourself", "screw you",
+
+    # Deutsch – klassische Beleidigungen
+    "dumm", "blöd", "vollidiot", "trottel", "depp", "arsch",
+    "arschloch", "spast", "spasti", "mongo", "hirnamputiert",
+    "scheiß", "scheiss", "scheißkerl", "idiotiker",
+
+    # Deutsch – harte Beleidigungen
+    "hurensohn", "hs", "hure", "nutte", "fotze", "wichser",
+    "wixxer", "drecksack", "opfer", "missgeburt",
+    "untermensch", "minderbemittelt", "minderwertig",
+    "asozial", "aso", "assozial", "kackhaufen",
+
+    # Deutsch – Slang & vulgär
+    "lutscher", "schwanz", "schwanzlutscher", "schwanz lutscher",
+    "pimmel", "pimmelfresser", "fick dich", "leck mich",
+    "verpiss dich", "verpiss", "spacken", "spacko",
+    "hosenscheißer", "ar***", "kackbratze",
+
+    # Chat-/Jugendvarianten
+    "opfa", "b1tch", "fck", "fck u", "fkn", "huso", "huso*", "huren sohn",
+    "fotzn", "wtf idiot", "kys idiot", "kys", "kill yourself", "kill urself",
+
+    # Abwertungen & indirekte Beleidigungen
+    "vollpfosten", "pfeife", "nulpe", "kanacke", "penner",
+    "pleb", "primitive", "wurm", "ratte", "zecke",
+
+    # Meme-/Szenebezogene (Neutral genug, aber beleidigend)
+    "gti fahrer", "kartoffel", "kapitalist", "opferkind",
+]
 
 #---
 
@@ -680,6 +721,74 @@ user_input = st.chat_input(
 # 3) Wenn User etwas sendet → LLM-Antwort holen
 if user_input and not st.session_state["closed"]:
 
+    # --- C1: Beleidigungscheck ---
+    text_lower = user_input.lower()
+    if any(word in text_lower for word in INSULT_WORDS):
+        st.session_state["closed"] = True
+        st.session_state["history"].append({
+            "role": "assistant",
+            "text": "Damit ist die Verhandlung beendet.",
+            "ts": datetime.now(tz).strftime("%d.%m.%Y %H:%M"),
+        })
+        log_result(st.session_state["session_id"], False, None, len(st.session_state["history"]))
+        st.stop()
+
+# --- Gleiche Nachricht zwei-/dreimal ---
+if st.session_state["last_user_msg"] == user_input.strip():
+    st.session_state["duplicate_msg_count"] += 1
+else:
+    st.session_state["duplicate_msg_count"] = 0
+
+if st.session_state["duplicate_msg_count"] == 1:
+    st.warning("Dieselbe Nachricht wurde zweimal wiederholt. Bitte formuliere neu.")
+    # Speichern trotzdem erlaubt → Bot antwortet wie gewohnt
+elif st.session_state["duplicate_msg_count"] >= 2:
+    st.session_state["closed"] = True
+    st.session_state["history"].append({
+        "role": "assistant",
+        "text": "Da du dich wiederholst, wird die Verhandlung beendet.",
+        "ts": datetime.now(tz).strftime("%d.%m.%Y %H:%M"),
+    })
+    log_result(st.session_state["session_id"], False, None, len(st.session_state["history"]))
+    st.stop()
+   
+# --- Analyse Preisangabe ---
+user_offer_numbers = re.findall(r"\d{2,5}", user_input)
+user_offer = int(user_offer_numbers[0]) if user_offer_numbers else None
+
+# --- Angebot zweimal gleich ---
+if user_offer is not None:
+    if st.session_state["last_user_offer"] == user_offer:
+        st.session_state["duplicate_offer_count"] += 1
+    else:
+        st.session_state["duplicate_offer_count"] = 0
+
+    if st.session_state["duplicate_offer_count"] == 1:
+        st.warning("Du hast exakt dasselbe Angebot erneut gesendet.")
+    elif st.session_state["duplicate_offer_count"] >= 2:
+        st.session_state["closed"] = True
+        st.session_state["history"].append({
+            "role": "assistant",
+            "text": "Da du dein Angebot wiederholt hast, beende ich die Verhandlung.",
+            "ts": datetime.now(tz).strftime("%d.%m.%Y %H:%M"),
+        })
+        log_result(st.session_state["session_id"], False, None, len(st.session_state["history"]))
+        st.stop()
+
+    # --- Unterbieten des eigenen Angebots ---
+    if st.session_state["last_user_offer"] and user_offer < st.session_state["last_user_offer"]:
+        st.session_state["closed"] = True
+        st.session_state["history"].append({
+            "role": "assistant",
+            "text": "Du hast dein eigenes Angebot unterboten. Damit ist die Verhandlung beendet.",
+            "ts": datetime.now(tz).strftime("%d.%m.%Y %H:%M"),
+        })
+        log_result(st.session_state["session_id"], False, None, len(st.session_state["history"]))
+        st.stop()
+
+st.session_state["last_user_msg"] = user_input.strip()
+st.session_state["last_user_offer"] = user_offer
+    
     # Zeitstempel erzeugen
     now = datetime.now(tz).strftime("%d.%m.%Y %H:%M")
 
