@@ -42,6 +42,19 @@ if "session_id" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state["history"] = []  # Chat-Verlauf als Liste von Dicts
 
+# Zusätzliche Kontrollvariablen
+if "last_user_msg" not in st.session_state:
+    st.session_state["last_user_msg"] = None
+
+if "last_user_offer" not in st.session_state:
+    st.session_state["last_user_offer"] = None
+
+if "duplicate_msg_count" not in st.session_state:
+    st.session_state["duplicate_msg_count"] = 0
+
+if "duplicate_offer_count" not in st.session_state:
+    st.session_state["duplicate_offer_count"] = 0
+    
 if "agreed_price" not in st.session_state:
     st.session_state["agreed_price"] = None  # Preis, der per Deal-Button bestätigt werden kann
 
