@@ -935,7 +935,7 @@ if user_input and not st.session_state["closed"]:
     })
 
     msg_index = len(st.session_state["history"]) - 1
-        log_chat_message(
+    log_chat_message(
             st.session_state["session_id"],
             "assistant",
             bot_text,
