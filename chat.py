@@ -861,6 +861,33 @@ def load_results_df() -> pd.DataFrame:
         df["deal"] = df["deal"].map({1: "Deal", 0: "Abgebrochen"})
     return df
 
+def export_all_chats_to_txt() -> str:
+    _init_db()
+    conn = sqlite3.connect(DB_PATH)
+
+    df = pd.read_sql_query("""
+        SELECT session_id, role, text, ts
+        FROM chat_messages
+        ORDER BY session_id, msg_index ASC
+    """, conn)
+
+    conn.close()
+
+    if df.empty:
+        return "Keine Chatverläufe vorhanden."
+
+    output = []
+    for session_id, group in df.groupby("session_id"):
+        output.append(f"Session-ID: {session_id}")
+        output.append("-" * 50)
+
+        for _, row in group.iterrows():
+            role = "USER" if row["role"] == "user" else "BOT"
+            output.append(f"[{row['ts']}] {role}: {row['text']}")
+
+        output.append("\n" + "=" * 60 + "\n")
+
+    return "\n".join(output)
 
 def extract_price_from_bot(msg: str) -> int | None:
     text = msg.lower()
@@ -1184,6 +1211,22 @@ if pwd_ok:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
             )
+        
+        # =============================
+        # 📥 CHAT-EXPORT (NEU)
+        # =============================
+        st.markdown("### 📥 Chat-Export")
+
+        chat_txt = export_all_chats_to_txt()
+
+        st.download_button(
+            label="📄 Alle Chats als TXT herunterladen",
+            data=chat_txt,
+            file_name="alle_chatverlaeufe.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+        
         # -----------------------------
         # Session-Auswahl für Chat
         # -----------------------------
